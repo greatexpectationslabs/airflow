@@ -28,13 +28,6 @@ log = logging.getLogger(__name__)
 
 
 class GreatExpectationsOperator(BaseOperator):
-    """
-        This is the base operator for all Great Expectations operators.
-
-        TODO: Update doc string
-    """
-
-
     @apply_defaults
     def __init__(self,
                  *,
@@ -45,16 +38,29 @@ class GreatExpectationsOperator(BaseOperator):
                  batch_kwargs=None,
                  assets_to_validate=None,
                  checkpoint_name=None,
-                 fail_task=True,
+                 fail_task_on_validation_failure=True,
                  validation_operator_name="action_list_operator",
                  **kwargs
-        ):
+                 ):
+        """
+        Args:
+            run_id: Optional run_id to identify the validation run (defaults to timestamp if not specified)
+            data_context_root_dir: Path of the great_expectations directory data_context: A great_expectations
+            DataContext object expectation_suite_name: The name of the Expectation Suite to use for validation
+            batch_kwargs: The batch_kwargs to use for validation assets_to_validate: A list of dictionaries of
+            batch_kwargs + expectation suites to use for validation checkpoint_name: A Checkpoint name to use for
+            validation fail_task_on_validation_failure: Fail the Airflow task if the Great Expectation validation fails
+            validation_operator_name: Optional name of a Great Expectations validation operator, defaults to
+            action_list_operator
+            **kwargs: Optional kwargs
+        """
         super().__init__(**kwargs)
 
         self.run_id = run_id
 
+        # Check that only one of the arguments is passed to set a data context (or none)
         if data_context_root_dir and data_context:
-            raise ValueError("Only one of data_context_root_dir or data_context should be used.")
+            raise ValueError("Only one of data_context_root_dir or data_context can be specified.")
 
         if data_context:
             self.data_context = data_context
@@ -63,18 +69,24 @@ class GreatExpectationsOperator(BaseOperator):
         else:
             self.data_context = ge.DataContext()
 
-        # TODO: check that only one of the following is passed
+        # Check that only the correct args to validate are passed
+        # this doesn't cover the case where only one of expectation_suite_name or batch_kwargs is specified
+        # along with one of the others, but I'm ok with just giving precedence to the correct one
+        if sum(bool(x) for x in [(expectation_suite_name and batch_kwargs), assets_to_validate, checkpoint_name]) != 1:
+            raise ValueError("Exactly one of expectation_suite_name + batch_kwargs, assets_to_validate, \
+             or checkpoint_name is required to run validation.")
+
         self.expectation_suite_name = expectation_suite_name
         self.batch_kwargs = batch_kwargs
         self.assets_to_validate = assets_to_validate
         self.checkpoint_name = checkpoint_name
 
-        self.fail_task = fail_task
+        self.fail_task_on_validation_failure = fail_task_on_validation_failure
 
         self.validation_operator_name = validation_operator_name
 
     def execute(self, context):
-        log.info("Running validation with Great Expectations")
+        log.info("Running validation with Great Expectations...")
 
         batches_to_validate = []
         validation_operator_name = self.validation_operator_name
@@ -109,7 +121,10 @@ class GreatExpectationsOperator(BaseOperator):
         )
 
         if not results["success"]:
-            if self.fail_task:
-                raise AirflowException('Great Expectations validation failed')
+            if self.fail_task_on_validation_failure:
+                raise AirflowException("Validation with Great Expectations failed.")
             else:
-                log.warning("Validation with Great Expectation failed.")
+                log.warning("Validation with Great Expectations failed.")
+        else:
+            log.info("Validation with Great Expectations successful.")
+
