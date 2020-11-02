@@ -31,7 +31,7 @@ class GreatExpectationsOperator(BaseOperator):
     @apply_defaults
     def __init__(self,
                  *,
-                 run_id=None,
+                 run_name=None,
                  data_context_root_dir=None,
                  data_context=None,
                  expectation_suite_name=None,
@@ -127,4 +127,3 @@ class GreatExpectationsOperator(BaseOperator):
                 log.warning("Validation with Great Expectations failed.")
         else:
             log.info("Validation with Great Expectations successful.")
-
