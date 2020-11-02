@@ -44,19 +44,21 @@ class GreatExpectationsOperator(BaseOperator):
                  ):
         """
         Args:
-            run_id: Optional run_id to identify the validation run (defaults to timestamp if not specified)
-            data_context_root_dir: Path of the great_expectations directory data_context: A great_expectations
-            DataContext object expectation_suite_name: The name of the Expectation Suite to use for validation
-            batch_kwargs: The batch_kwargs to use for validation assets_to_validate: A list of dictionaries of
-            batch_kwargs + expectation suites to use for validation checkpoint_name: A Checkpoint name to use for
-            validation fail_task_on_validation_failure: Fail the Airflow task if the Great Expectation validation fails
+            run_name: Optional run_name to identify the validation run (defaults to timestamp if not specified)
+            data_context_root_dir: Path of the great_expectations directory
+            data_context: A great_expectations DataContext object
+            expectation_suite_name: The name of the Expectation Suite to use for validation
+            batch_kwargs: The batch_kwargs to use for validation
+            assets_to_validate: A list of dictionaries of batch_kwargs + expectation suites to use for validation
+            checkpoint_name: A Checkpoint name to use for validation
+            fail_task_on_validation_failure: Fail the Airflow task if the Great Expectation validation fails
             validation_operator_name: Optional name of a Great Expectations validation operator, defaults to
             action_list_operator
             **kwargs: Optional kwargs
         """
         super().__init__(**kwargs)
 
-        self.run_id = run_id
+        self.run_name = run_name
 
         # Check that only one of the arguments is passed to set a data context (or none)
         if data_context_root_dir and data_context:
@@ -117,7 +119,7 @@ class GreatExpectationsOperator(BaseOperator):
         results = self.data_context.run_validation_operator(
             validation_operator_name,
             assets_to_validate=batches_to_validate,
-            run_id=self.run_id
+            run_name=self.run_name
         )
 
         if not results["success"]:
