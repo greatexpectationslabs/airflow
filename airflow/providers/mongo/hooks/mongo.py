@@ -55,9 +55,11 @@ class MongoHook(BaseHook):
 
         self.uri = '{scheme}://{creds}{host}{port}/{database}'.format(
             scheme=scheme,
-            creds='{}:{}@'.format(self.connection.login, self.connection.password)
-            if self.connection.login
-            else '',
+            creds=(
+                '{}:{}@'.format(self.connection.login, self.connection.password)
+                if self.connection.login
+                else ''
+            ),
             host=self.connection.host,
             port='' if self.connection.port is None else ':{}'.format(self.connection.port),
             database=self.connection.schema,

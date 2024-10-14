@@ -253,7 +253,7 @@ class ElasticsearchTaskHandler(FileTaskHandler, LoggingMixin):
                     'execution_date': self._clean_execution_date(ti.execution_date),
                     'try_number': str(ti.try_number),
                     'log_id': self._render_log_id(ti, ti.try_number),
-                    'offset': int(time() * (10 ** 9)),
+                    'offset': int(time() * (10**9)),
                 },
             )
 
