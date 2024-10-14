@@ -2755,7 +2755,7 @@ def _bind_parameters(operation: str, parameters: dict) -> str:
     """Helper method that binds parameters to a SQL query"""
     # inspired by MySQL Python Connector (conversion.py)
     string_parameters = {}  # type Dict[str, str]
-    for (name, value) in parameters.items():
+    for name, value in parameters.items():
         if value is None:
             string_parameters[name] = 'NULL'
         elif isinstance(value, str):

@@ -88,9 +88,11 @@ def patch_pool(pool_name, session, update_mask=None):
         _patch_body = {}
         try:
             update_mask = [
-                pool_schema.declared_fields[field].attribute
-                if pool_schema.declared_fields[field].attribute
-                else field
+                (
+                    pool_schema.declared_fields[field].attribute
+                    if pool_schema.declared_fields[field].attribute
+                    else field
+                )
                 for field in update_mask
             ]
         except KeyError as err:
